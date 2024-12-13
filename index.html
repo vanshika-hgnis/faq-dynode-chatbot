@@ -20,6 +20,39 @@
             }
         }
     </script>
+    <style>
+        /* Animation for typing dots */
+        .typing-dots::after {
+            content: '.';
+            animation: typing 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes typing {
+            0% {
+                content: '.';
+            }
+
+            20% {
+                content: '..';
+            }
+
+            40% {
+                content: '...';
+            }
+
+            60% {
+                content: '..';
+            }
+
+            80% {
+                content: '.';
+            }
+
+            100% {
+                content: '.';
+            }
+        }
+    </style>
 </head>
 
 <body class="bg-chat-bg min-h-screen flex flex-col">
@@ -29,7 +62,7 @@
         </header>
 
         <main class="flex-grow bg-white rounded-xl shadow-md mb-4 flex flex-col">
-            <div id="responses" class="flex-grow overflow-y-scroll p-4 space-y-4">
+            <div id="responses" class="flex-grow overflow-y-auto p-4 space-y-4">
                 <!-- Chat messages will be added here dynamically -->
                 <div class="text-center text-gray-500 pt-10">
                     Start a conversation with the chatbot
@@ -58,8 +91,16 @@
         const input = document.getElementById("question");
         const responses = document.getElementById("responses");
 
+        let typingIndicator = null; // To track the typing indicator
+
         // Handle messages from WebSocket
         ws.onmessage = (event) => {
+            // Remove typing indicator
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+
+            // Create bot's response container
             const messageContainer = document.createElement("div");
             messageContainer.classList.add("flex", "space-x-2");
 
@@ -88,6 +129,7 @@
             const question = input.value.trim();
             if (question === '') return;
 
+            // Create user message container
             const messageContainer = document.createElement("div");
             messageContainer.classList.add("flex", "justify-end", "space-x-2");
 
@@ -101,6 +143,24 @@
             messageContainer.appendChild(messageWrapper);
 
             responses.appendChild(messageContainer);
+
+            // Show typing indicator while fetching the answer
+            typingIndicator = document.createElement("div");
+            typingIndicator.classList.add("flex", "space-x-2", "justify-start");
+
+            const botIcon = document.createElement("div");
+            botIcon.classList.add("w-8", "h-8", "bg-blue-500", "text-white", "rounded-full", "flex", "items-center", "justify-center");
+            botIcon.textContent = "AI";
+
+            const typingWrapper = document.createElement("div");
+            typingWrapper.classList.add("bg-chat-bot", "p-3", "rounded-lg", "max-w-[80%]", "typing-dots");
+
+            typingWrapper.textContent = '...'; // Placeholder for typing animation
+
+            typingIndicator.appendChild(botIcon);
+            typingIndicator.appendChild(typingWrapper);
+
+            responses.appendChild(typingIndicator);
 
             // Send message via WebSocket
             ws.send(question);
