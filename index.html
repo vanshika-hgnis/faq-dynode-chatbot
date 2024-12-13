@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Chatbot</title>
+</head>
+
+<body>
+    <h1>Interactive Chatbot</h1>
+    <form action="javascript:void(0);" id="form">
+        <input id="question" type="text" placeholder="Ask a question..." autocomplete="off" />
+        <button type="submit">Send</button>
+    </form>
+    <div id="responses"></div>
+    <script>
+        const ws = new WebSocket("ws://" + window.location.host + "/ws");
+        const form = document.getElementById("form");
+        const input = document.getElementById("question");
+        const responses = document.getElementById("responses");
+
+        ws.onmessage = (event) => {
+            const p = document.createElement("p");
+            p.textContent = "Bot: " + event.data;
+            responses.appendChild(p);
+        };
+
+        form.onsubmit = () => {
+            const question = input.value;
+            const p = document.createElement("p");
+            p.textContent = "You: " + question;
+            responses.appendChild(p);
+            ws.send(question);
+            input.value = "";
+        };
+    </script>
+</body>
+
+</html>

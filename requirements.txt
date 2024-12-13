@@ -1,1 +1,7 @@
 fastapi[all]
+
+fastapi
+uvicorn
+pandas
+faiss-cpu
+sentence-transformers
