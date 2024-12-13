@@ -1,17 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'chat-bg': '#f0f2f5',
+                        'chat-input-bg': '#ffffff',
+                        'chat-user': '#e5e5ea',
+                        'chat-bot': '#f0f0f0'
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 
-<body>
-    <h1>Interactive Chatbot</h1>
-    <form action="javascript:void(0);" id="form">
-        <input id="question" type="text" placeholder="Ask a question..." autocomplete="off" />
-        <button type="submit">Send</button>
-    </form>
-    <div id="responses"></div>
+<body class="bg-chat-bg min-h-screen flex flex-col">
+    <div class="container mx-auto max-w-2xl flex-grow flex flex-col">
+        <header class="text-center py-6">
+            <h1 class="text-3xl font-bold text-gray-800">Interactive Chatbot</h1>
+        </header>
+
+        <main class="flex-grow bg-white rounded-xl shadow-md mb-4 flex flex-col">
+            <div id="responses" class="flex-grow overflow-y-auto p-4 space-y-4">
+                <!-- Chat messages will be added here dynamically -->
+                <div class="text-center text-gray-500 pt-10">
+                    Start a conversation with the chatbot
+                </div>
+            </div>
+
+            <div class="border-t p-4">
+                <form action="javascript:void(0);" id="form" class="flex space-x-2">
+                    <input id="question" type="text" placeholder="Ask a question..." autocomplete="off"
+                        class="flex-grow p-3 bg-chat-input-bg border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <button type="submit"
+                        class="bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors">
+                        Send
+                    </button>
+                </form>
+            </div>
+        </main>
+    </div>
+
     <script>
         // Dynamically set WebSocket protocol based on page load protocol (HTTP or HTTPS)
         const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
@@ -23,19 +60,54 @@
 
         // Handle messages from WebSocket
         ws.onmessage = (event) => {
-            const p = document.createElement("p");
-            p.textContent = "Bot: " + event.data;
-            responses.appendChild(p);
+            const messageContainer = document.createElement("div");
+            messageContainer.classList.add("flex", "space-x-2");
+
+            const botIcon = document.createElement("div");
+            botIcon.classList.add("w-8", "h-8", "bg-blue-500", "text-white", "rounded-full", "flex", "items-center", "justify-center");
+            botIcon.textContent = "AI";
+
+            const messageWrapper = document.createElement("div");
+            messageWrapper.classList.add("bg-chat-bot", "p-3", "rounded-lg", "max-w-[80%]");
+
+            const messageText = document.createElement("p");
+            messageText.textContent = event.data;
+
+            messageWrapper.appendChild(messageText);
+            messageContainer.appendChild(botIcon);
+            messageContainer.appendChild(messageWrapper);
+
+            responses.appendChild(messageContainer);
+
+            // Auto-scroll to bottom
+            responses.scrollTop = responses.scrollHeight;
         };
 
         // Send user input to WebSocket
         form.onsubmit = () => {
-            const question = input.value;
-            const p = document.createElement("p");
-            p.textContent = "You: " + question;
-            responses.appendChild(p);
+            const question = input.value.trim();
+            if (question === '') return;
+
+            const messageContainer = document.createElement("div");
+            messageContainer.classList.add("flex", "justify-end", "space-x-2");
+
+            const messageWrapper = document.createElement("div");
+            messageWrapper.classList.add("bg-chat-user", "p-3", "rounded-lg", "max-w-[80%]");
+
+            const messageText = document.createElement("p");
+            messageText.textContent = question;
+
+            messageWrapper.appendChild(messageText);
+            messageContainer.appendChild(messageWrapper);
+
+            responses.appendChild(messageContainer);
+
+            // Send message via WebSocket
             ws.send(question);
             input.value = "";
+
+            // Auto-scroll to bottom
+            responses.scrollTop = responses.scrollHeight;
         };
     </script>
 </body>
