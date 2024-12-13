@@ -13,17 +13,22 @@
     </form>
     <div id="responses"></div>
     <script>
-        const ws = new WebSocket("ws://" + window.location.host + "/ws");
+        // Dynamically set WebSocket protocol based on page load protocol (HTTP or HTTPS)
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const ws = new WebSocket(protocol + window.location.host + "/ws");
+
         const form = document.getElementById("form");
         const input = document.getElementById("question");
         const responses = document.getElementById("responses");
 
+        // Handle messages from WebSocket
         ws.onmessage = (event) => {
             const p = document.createElement("p");
             p.textContent = "Bot: " + event.data;
             responses.appendChild(p);
         };
 
+        // Send user input to WebSocket
         form.onsubmit = () => {
             const question = input.value;
             const p = document.createElement("p");
