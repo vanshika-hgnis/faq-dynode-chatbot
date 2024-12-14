@@ -106,3 +106,8 @@ venv.bak/
 
 # Mac OS
 .DS_Store
+
+#other 
+datasetwithcontext.csv
+render.yaml
+README.md 
