@@ -1,3 +1,3 @@
 # FAQ Chatbot
 
-## FAQ Chatbot using LLM and RAG.
+FAQ Chatbot using LLM and RAG.
