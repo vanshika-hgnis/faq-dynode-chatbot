@@ -62,7 +62,7 @@
         </header>
 
         <main class="flex-grow bg-white rounded-xl shadow-md mb-4 flex flex-col">
-            <div id="responses" class="flex-grow overflow-y-auto p-4 space-y-4">
+            <div id="responses" class="flex-grow overflow-y-scroll p-4 space-y-4">
                 <!-- Chat messages will be added here dynamically -->
                 <div class="text-center text-gray-500 pt-10">
                     Start a conversation with the chatbot
@@ -70,7 +70,7 @@
             </div>
 
             <div class="border-t p-4">
-                <form action="javascript:void(0);" id="form" class="flex space-x-2">
+                <form id="form" class="flex space-x-2">
                     <input id="question" type="text" placeholder="Ask a question..." autocomplete="off"
                         class="flex-grow p-3 bg-chat-input-bg border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     <button type="submit"
@@ -83,49 +83,66 @@
     </div>
 
     <script>
-        // Dynamically set WebSocket protocol based on page load protocol (HTTP or HTTPS)
-        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-        const ws = new WebSocket(protocol + window.location.host + "/ws");
-
         const form = document.getElementById("form");
         const input = document.getElementById("question");
         const responses = document.getElementById("responses");
 
-        let typingIndicator = null; // To track the typing indicator
+        // Updated WebSocket connection with reconnection logic
+        let ws;
+        function connectWebSocket() {
+            ws = new WebSocket('ws://localhost:8000/ws/chatbot');
 
-        // Handle messages from WebSocket
-        ws.onmessage = (event) => {
-            // Remove typing indicator
-            if (typingIndicator) {
-                typingIndicator.remove();
-            }
+            ws.onopen = () => {
+                console.log('Connected to WebSocket');
+            };
 
-            // Create bot's response container
-            const messageContainer = document.createElement("div");
-            messageContainer.classList.add("flex", "space-x-2");
+            ws.onmessage = (event) => {
+                const reply = event.data;
 
-            const botIcon = document.createElement("div");
-            botIcon.classList.add("w-8", "h-8", "bg-blue-500", "text-white", "rounded-full", "flex", "items-center", "justify-center");
-            botIcon.textContent = "AI";
+                // Remove typing indicator
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
 
-            const messageWrapper = document.createElement("div");
-            messageWrapper.classList.add("bg-chat-bot", "p-3", "rounded-lg", "max-w-[80%]");
+                // Create bot's response container
+                const botMessageContainer = document.createElement("div");
+                botMessageContainer.classList.add("flex", "space-x-2");
 
-            const messageText = document.createElement("p");
-            messageText.textContent = event.data;
+                const botMessageIcon = document.createElement("div");
+                botMessageIcon.classList.add("w-8", "h-8", "bg-blue-500", "text-white", "rounded-full", "flex", "items-center", "justify-center");
+                botMessageIcon.textContent = "AI";
 
-            messageWrapper.appendChild(messageText);
-            messageContainer.appendChild(botIcon);
-            messageContainer.appendChild(messageWrapper);
+                const botMessageWrapper = document.createElement("div");
+                botMessageWrapper.classList.add("bg-chat-bot", "p-3", "rounded-lg", "max-w-[80%]");
 
-            responses.appendChild(messageContainer);
+                const botMessageText = document.createElement("p");
+                botMessageText.textContent = reply;
 
-            // Auto-scroll to bottom
-            responses.scrollTop = responses.scrollHeight;
-        };
+                botMessageWrapper.appendChild(botMessageText);
+                botMessageContainer.appendChild(botMessageIcon);
+                botMessageContainer.appendChild(botMessageWrapper);
 
-        // Send user input to WebSocket
-        form.onsubmit = () => {
+                responses.appendChild(botMessageContainer);
+
+                // Auto-scroll to bottom
+                responses.scrollTop = responses.scrollHeight;
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket disconnected. Attempting to reconnect...');
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        // Initial connection
+        connectWebSocket();
+
+        let typingIndicator = null;
+
+        form.addEventListener('submit', function (event) {
+            // Prevent the default form submission
+            event.preventDefault();
+
             const question = input.value.trim();
             if (question === '') return;
 
@@ -162,13 +179,16 @@
 
             responses.appendChild(typingIndicator);
 
-            // Send message via WebSocket
-            ws.send(question);
-            input.value = "";
-
             // Auto-scroll to bottom
             responses.scrollTop = responses.scrollHeight;
-        };
+
+            // Send the question via WebSocket
+            ws.send(question);
+
+            // Clear input
+            input.value = '';
+            input.focus(); // Optional: refocus the input after clearing
+        });
     </script>
 </body>
 

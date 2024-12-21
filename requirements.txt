@@ -5,3 +5,5 @@ uvicorn
 pandas
 faiss-cpu
 sentence-transformers
+websockets 
+numpy
